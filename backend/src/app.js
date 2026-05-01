@@ -9,6 +9,7 @@ import taskRoutes from './routes/tasks.js';
 import userRoutes from './routes/users.js';
 import invitationRoutes from './routes/invitations.js';
 import columnRoutes from './routes/columns.js';
+import aiRoutes from './routes/ai.js';
 import { error } from './utils/response.js';
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/projects', invitationRoutes);
 app.use('/api/projects', columnRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

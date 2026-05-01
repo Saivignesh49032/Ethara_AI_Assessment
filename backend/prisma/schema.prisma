@@ -18,6 +18,7 @@ model User {
   assignedTasks      Task[]          @relation("AssignedTasks")
   createdTasks       Task[]          @relation("CreatedTasks")
   sentInvitations    Invitation[]    @relation("SentInvitations")
+  activities         Activity[]
 }
 
 model Project {
@@ -31,6 +32,7 @@ model Project {
   tasks       Task[]
   invitations Invitation[]
   columns     BoardColumn[]
+  activities  Activity[]
 }
 
 model ProjectMember {
@@ -107,4 +109,19 @@ enum InvitationStatus {
   PENDING
   ACCEPTED
   EXPIRED
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  action    String   // e.g., "CREATED_TASK", "UPDATED_STATUS", "ADDED_MEMBER"
+  details   String?  // JSON string for extra info
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  taskId    String?
 }

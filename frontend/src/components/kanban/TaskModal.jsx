@@ -19,9 +19,11 @@ import Button from '../ui/Button';
 import Avatar from '../ui/Avatar';
 import Badge from '../ui/Badge';
 import { createTask, updateTask } from '../../api/tasks';
+import { getAISuggestion } from '../../api/ai';
 import { toast } from 'react-hot-toast';
+import { Sparkles, Loader2 } from 'lucide-react';
 
-const TaskModal = ({ isOpen, onClose, task, project, onSave, onDelete, isAdmin, columns }) => {
+const TaskModal = ({ isOpen, onClose, task, project, onSave, onRefresh, onDelete, isAdmin, columns }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -33,6 +35,8 @@ const TaskModal = ({ isOpen, onClose, task, project, onSave, onDelete, isAdmin, 
     parentId: ''
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [prediction, setPrediction] = useState(null);
   const [activeTab, setActiveTab] = useState('details'); // 'details' or 'subtasks'
 
   useEffect(() => {
@@ -59,8 +63,44 @@ const TaskModal = ({ isOpen, onClose, task, project, onSave, onDelete, isAdmin, 
         parentId: ''
       });
     }
+    setPrediction(null);
     setActiveTab('details');
   }, [task, isOpen, columns]);
+
+  // AI Priority Suggestion
+  useEffect(() => {
+    if (task || !formData.title || formData.title.length < 5) {
+      setPrediction(null);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        setIsPredicting(true);
+        const data = await getAISuggestion(formData.title);
+        if (data.type !== formData.type || data.priority !== formData.priority) {
+          setPrediction(data);
+        }
+      } catch (error) {
+        console.error('Prediction error:', error);
+      } finally {
+        setIsPredicting(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.title, task]);
+
+  const applyPrediction = () => {
+    if (!prediction) return;
+    setFormData(prev => ({ 
+      ...prev, 
+      type: prediction.type, 
+      priority: prediction.priority 
+    }));
+    setPrediction(null);
+    toast.success('AI suggestions applied!', { icon: '✨' });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -90,9 +130,7 @@ const TaskModal = ({ isOpen, onClose, task, project, onSave, onDelete, isAdmin, 
         status: columns?.[0]?.name || 'TODO'
       });
       toast.success('Subtask added');
-      // Refresh task data - we'll just re-save/update in parent for simplicity or use a refresh callback
-      // For now, let's assume parent handles the board state refresh
-      onSave(formData); // This is a bit hacky, better to have a refresh function
+      if (onRefresh) onRefresh();
     } catch (err) {
       toast.error('Failed to add subtask');
     }
@@ -186,6 +224,35 @@ const TaskModal = ({ isOpen, onClose, task, project, onSave, onDelete, isAdmin, 
                   disabled={!canEditAll}
                   className="text-lg font-semibold"
                 />
+
+                {isPredicting && (
+                  <div className="flex items-center gap-2 text-[10px] text-accent animate-pulse font-bold uppercase tracking-widest px-1">
+                    <Loader2 size={12} className="animate-spin" /> Analyzing task intent...
+                  </div>
+                )}
+
+                {prediction && (
+                  <div className="bg-accent/10 border border-accent/20 rounded-xl p-3 flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded-lg bg-accent/20 text-accent">
+                        <Sparkles size={14} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-text-primary">AI Suggestion</p>
+                        <p className="text-[10px] text-text-secondary uppercase">
+                          Set to <span className="text-accent">{prediction.type}</span> • <span className="text-accent">{prediction.priority}</span>?
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={applyPrediction}
+                      className="text-[10px] font-bold bg-accent text-white px-3 py-1 rounded-lg hover:bg-accent-hover transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
                 
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-2">

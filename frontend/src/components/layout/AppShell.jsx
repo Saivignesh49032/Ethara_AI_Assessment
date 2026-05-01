@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import AIChatBubble from '../ai/AIChatBubble';
 
 const AppShell = () => {
   return (
@@ -13,6 +14,7 @@ const AppShell = () => {
           <Outlet />
         </main>
       </div>
+      <AIChatBubble />
     </div>
   );
 };

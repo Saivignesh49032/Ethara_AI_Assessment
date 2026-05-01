@@ -39,3 +39,8 @@ export const changeRole = async (projectId, userId, role) => {
   const response = await api.patch(`/projects/${projectId}/members/${userId}/role`, { role });
   return response.data.data;
 };
+
+export const getProjectActivities = async (id) => {
+  const response = await api.get(`/projects/${id}/activities`);
+  return response.data.data;
+};

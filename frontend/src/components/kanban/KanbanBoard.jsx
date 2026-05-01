@@ -15,7 +15,7 @@ import {
   horizontalListSortingStrategy,
   arrayMove
 } from '@dnd-kit/sortable';
-import { Plus, LayoutTemplate, Settings2 } from 'lucide-react';
+import { Plus, LayoutTemplate, Settings2, Sparkles } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { getProjectTasks, createTask, updateTask, updateStatus, deleteTask } from '../../api/tasks';
@@ -24,6 +24,7 @@ import KanbanColumn from './KanbanColumn';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
 import TaskFilters from './TaskFilters';
+import AIModal from '../ai/AIModal';
 import Button from '../ui/Button';
 
 const KanbanBoard = ({ project, isAdmin }) => {
@@ -35,9 +36,13 @@ const KanbanBoard = ({ project, isAdmin }) => {
   const [activeColumn, setActiveColumn] = useState(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [newColName, setNewColName] = useState('');
+  const [newColColor, setNewColColor] = useState('#94a3b8');
+  
+  const PRESET_COLORS = ['#94a3b8', '#3b82f6', '#a855f7', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
   
   const [filters, setFilters] = useState({ assigneeId: '', priority: '', type: '' });
 
@@ -53,6 +58,15 @@ const KanbanBoard = ({ project, isAdmin }) => {
   useEffect(() => {
     applyFilters();
   }, [tasks, filters]);
+
+  useEffect(() => {
+    if (selectedTask) {
+      const updated = tasks.find(t => t.id === selectedTask.id);
+      if (updated && JSON.stringify(updated) !== JSON.stringify(selectedTask)) {
+        setSelectedTask(updated);
+      }
+    }
+  }, [tasks, selectedTask]);
 
   const fetchBoardData = async () => {
     try {
@@ -158,6 +172,21 @@ const KanbanBoard = ({ project, isAdmin }) => {
     }
   };
 
+  const handleCreateColumn = async (e) => {
+    e.preventDefault();
+    if (!newColName.trim()) return;
+    try {
+      const data = await createColumn(project.id, { 
+        name: newColName.trim().toUpperCase().replace(/\s+/g, '_'),
+        color: newColColor
+      });
+      setColumns([...columns, data.column]);
+      setNewColName('');
+      setNewColColor('#94a3b8');
+      setIsColumnModalOpen(false);
+    } catch (err) { toast.error(err.response?.data?.error || 'Failed'); }
+  };
+
   const handleSaveTask = async (formData) => {
     if (selectedTask) {
       const data = isAdmin ? await updateTask(selectedTask.id, formData) : await updateStatus(selectedTask.id, formData.status);
@@ -180,11 +209,17 @@ const KanbanBoard = ({ project, isAdmin }) => {
               <LayoutTemplate className="mr-2 h-4 w-4" /> Add Column
             </Button>
           )}
-          {isAdmin && (
-            <Button onClick={() => { setSelectedTask(null); setIsModalOpen(true); }} size="sm">
-              <Plus className="mr-2 h-4 w-4" /> New Task
-            </Button>
-          )}
+          <Button 
+            onClick={() => setIsAIModalOpen(true)} 
+            variant="secondary" 
+            size="sm"
+            className="!bg-gradient-to-r from-accent/20 to-purple-500/20 border-accent/30 hover:border-accent/50 text-accent"
+          >
+            <Sparkles className="mr-2 h-4 w-4" /> AI Generate
+          </Button>
+          <Button onClick={() => { setSelectedTask(null); setIsModalOpen(true); }} size="sm">
+            <Plus className="mr-2 h-4 w-4" /> New Task
+          </Button>
         </div>
       </div>
 
@@ -221,23 +256,32 @@ const KanbanBoard = ({ project, isAdmin }) => {
         </div>
       </div>
 
-      <TaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} task={selectedTask} project={project} isAdmin={isAdmin} onSave={handleSaveTask} onDelete={(id) => { deleteTask(id); setTasks(tasks.filter(t => t.id !== id)); setIsModalOpen(false); }} columns={columns} />
+      <AIModal 
+        isOpen={isAIModalOpen} 
+        onClose={() => setIsAIModalOpen(false)} 
+        projectId={project.id} 
+        onRefresh={fetchBoardData} 
+        columns={columns}
+      />
+      <TaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} task={selectedTask} project={project} isAdmin={isAdmin} onSave={handleSaveTask} onRefresh={fetchBoardData} onDelete={(id) => { deleteTask(id); setTasks(tasks.filter(t => t.id !== id)); setIsModalOpen(false); }} columns={columns} />
 
       {isColumnModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="bg-bg-secondary p-6 rounded-2xl w-full max-w-sm border border-border shadow-2xl">
             <h3 className="text-lg font-bold mb-4">New Column</h3>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              if (!newColName.trim()) return;
-              try {
-                const data = await createColumn(project.id, { name: newColName.trim().toUpperCase().replace(/\s+/g, '_') });
-                setColumns([...columns, data.column]);
-                setNewColName('');
-                setIsColumnModalOpen(false);
-              } catch (err) { toast.error(err.response?.data?.error || 'Failed'); }
-            }}>
-              <input autoFocus className="w-full border border-border bg-bg-tertiary px-3 py-2 rounded-xl mb-4 text-sm focus:ring-2 focus:ring-accent outline-none" placeholder="e.g. TESTING" value={newColName} onChange={e => setNewColName(e.target.value)} />
+            <form onSubmit={handleCreateColumn}>
+              <div className="mb-3">
+                <label className="text-xs text-text-secondary mb-1 block">Column Name</label>
+                <input autoFocus className="w-full border border-border bg-bg-tertiary px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-accent outline-none" placeholder="e.g. TESTING" value={newColName} onChange={e => setNewColName(e.target.value)} />
+              </div>
+              <div className="mb-6">
+                <label className="text-xs text-text-secondary mb-2 block">Color</label>
+                <div className="flex gap-2 flex-wrap">
+                  {PRESET_COLORS.map(c => (
+                    <button type="button" key={c} onClick={() => setNewColColor(c)} className={`w-6 h-6 rounded-full cursor-pointer transition-all ${newColColor === c ? 'ring-2 ring-accent ring-offset-2 ring-offset-bg-secondary scale-110' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={() => setIsColumnModalOpen(false)}>Cancel</Button>
                 <Button type="submit">Create</Button>

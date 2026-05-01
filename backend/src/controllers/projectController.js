@@ -238,3 +238,21 @@ export const changeRole = async (req, res) => {
     return error(res, 'Internal server error', 500);
   }
 };
+
+export const getProjectActivities = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const activities = await prisma.activity.findMany({
+      where: { projectId: id },
+      include: {
+        user: { select: { id: true, name: true, email: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+    return success(res, { activities });
+  } catch (err) {
+    console.error('Get activities error:', err);
+    return error(res, 'Internal server error', 500);
+  }
+};

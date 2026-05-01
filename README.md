@@ -7,19 +7,28 @@
 *(To be added)*
 
 ## Tech Stack
-- **Frontend**: React + Vite + Tailwind CSS + Zustand + Dnd-Kit + Recharts
+- **Frontend**: React + Vite + Vanilla CSS + Zustand + Dnd-Kit + Recharts
 - **Backend**: Node.js + Express
+- **AI**: Groq SDK (Llama 3.3 & 3.1)
 - **Database**: PostgreSQL + Prisma ORM
 - **Auth**: JWT
 - **Deployment**: Railway
 
 ## Features
+
+### 🤖 AI-Powered Intelligence
+- **✨ AI Task Generator**: Transform goals into Epics and Subtasks instantly using Llama 3.
+- **🤖 Project Co-Pilot**: Context-aware floating chat assistant that knows your project's overdue tasks and team status.
+- **💡 Smart Priority Predictor**: Real-time AI suggestions for task type and priority while you type.
+- **📊 AI Project Health Advisor**: High-level audits on the dashboard with health status and risk analysis.
+
+### Core Functionality
 - Authentication (Signup/Login with JWT)
 - Role-Based Access (Admin/Member per project)
 - Project Management (create, manage members)
 - Task Management (create, assign, track status)
 - Kanban Board with drag-and-drop
-- Dashboard with stats and overdue tracking
+- Dashboard with stats and interactive charts (Recharts)
 
 ## Setup (Local)
 

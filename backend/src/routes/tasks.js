@@ -6,7 +6,8 @@ import {
   updateTask,
   updateStatus,
   assignTask,
-  deleteTask
+  deleteTask,
+  searchTasks
 } from '../controllers/taskController.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireProjectRole } from '../middleware/roleCheck.js';
@@ -14,6 +15,9 @@ import prisma from '../lib/prisma.js';
 import { error } from '../utils/response.js';
 
 const router = Router();
+
+// Global search
+router.get('/search', authenticate, searchTasks);
 
 // Middleware to resolve projectId from task for role checking
 const resolveTaskProject = async (req, res, next) => {

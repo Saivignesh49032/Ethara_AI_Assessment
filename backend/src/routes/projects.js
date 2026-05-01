@@ -7,7 +7,8 @@ import {
   deleteProject,
   addMember,
   removeMember,
-  changeRole
+  changeRole,
+  getProjectActivities
 } from '../controllers/projectController.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireProjectRole } from '../middleware/roleCheck.js';
@@ -20,6 +21,7 @@ router.get('/', authenticate, getProjects);
 
 // Project detail routes
 router.get('/:id', authenticate, requireProjectRole('MEMBER'), getProject);
+router.get('/:id/activities', authenticate, requireProjectRole('MEMBER'), getProjectActivities);
 router.put('/:id', authenticate, requireProjectRole('ADMIN'), updateProject);
 router.delete('/:id', authenticate, requireProjectRole('ADMIN'), deleteProject);
 

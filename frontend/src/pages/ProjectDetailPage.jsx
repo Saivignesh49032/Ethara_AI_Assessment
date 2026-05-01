@@ -8,6 +8,8 @@ import Skeleton from '../components/ui/Skeleton';
 import KanbanBoard from '../components/kanban/KanbanBoard';
 import ProjectSettings from '../components/projects/ProjectSettings';
 import MembersTab from '../components/projects/MembersTab';
+import BacklogTab from '../components/projects/BacklogTab';
+import ActivityTab from '../components/projects/ActivityTab';
 
 const ProjectDetailPage = () => {
   const { id } = useParams();
@@ -23,10 +25,10 @@ const ProjectDetailPage = () => {
   // Current user's role in this project
   const getMyRole = () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token || !project?.members) return 'MEMBER';
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return project.members.find(m => m.user?.id === payload.id)?.role || 'MEMBER';
+      const userStr = localStorage.getItem('user');
+      if (!userStr || !project?.members) return 'MEMBER';
+      const user = JSON.parse(userStr);
+      return project.members.find(m => m.user?.id === user.id)?.role || 'MEMBER';
     } catch {
       return 'MEMBER';
     }
@@ -79,12 +81,18 @@ const ProjectDetailPage = () => {
 
   const tabs = [
     { id: 'board', label: 'Board', show: true },
+    { id: 'backlog', label: 'Backlog', show: true },
+    { id: 'activity', label: 'Activity', show: true },
     { id: 'members', label: 'Members', show: true },
     { id: 'settings', label: 'Settings', show: isAdmin }
   ];
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'backlog':
+        return <BacklogTab project={project} isAdmin={isAdmin} />;
+      case 'activity':
+        return <ActivityTab project={project} />;
       case 'members':
         return <MembersTab project={project} onUpdate={fetchProject} />;
       case 'settings':

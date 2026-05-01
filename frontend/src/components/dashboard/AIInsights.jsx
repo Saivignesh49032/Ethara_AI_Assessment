@@ -1,0 +1,115 @@
+import React, { useState, useEffect } from 'react';
+import { Sparkles, TrendingUp, AlertTriangle, CheckCircle, Loader2, RefreshCcw } from 'lucide-react';
+import { analyzeProject } from '../../api/ai';
+
+const AIInsights = ({ projectId }) => {
+  const [analysis, setAnalysis] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchAnalysis = async () => {
+    if (!projectId) return;
+    try {
+      setIsLoading(true);
+      const data = await analyzeProject(projectId);
+      setAnalysis(data);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalysis();
+  }, [projectId]);
+
+  const getHealthBadge = (health) => {
+    switch (health) {
+      case 'GOOD': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400">HEALTHY</span>;
+      case 'AT_RISK': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">AT RISK</span>;
+      case 'CRITICAL': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400">CRITICAL</span>;
+      default: return null;
+    }
+  };
+
+  const getHealthIcon = (health) => {
+    switch (health) {
+      case 'GOOD': return <CheckCircle size={24} className="text-green-400" />;
+      case 'AT_RISK': return <AlertTriangle size={24} className="text-amber-400" />;
+      case 'CRITICAL': return <AlertTriangle size={24} className="text-red-400" />;
+      default: return <Sparkles size={24} className="text-accent" />;
+    }
+  };
+
+  if (!projectId) return null;
+
+  return (
+    <div className="bg-bg-secondary rounded-3xl border border-border overflow-hidden shadow-sm hover:border-accent/30 transition-all flex flex-col h-full">
+      <div className="p-5 border-b border-border bg-gradient-to-r from-accent/5 to-transparent flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-accent/10 text-accent">
+            <Sparkles size={18} />
+          </div>
+          <h3 className="font-bold text-text-primary">AI Project Health</h3>
+        </div>
+        <button 
+          onClick={fetchAnalysis} 
+          disabled={isLoading}
+          className="p-2 hover:bg-bg-tertiary rounded-lg text-text-secondary transition-colors disabled:opacity-50"
+        >
+          <RefreshCcw size={16} className={isLoading ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      <div className="p-6 flex-1 flex flex-col">
+        {isLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60">
+            <Loader2 size={32} className="animate-spin text-accent" />
+            <p className="text-xs font-medium text-text-secondary uppercase tracking-widest">Generating insights...</p>
+          </div>
+        ) : analysis ? (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-bg-primary border border-border">
+              <div className="flex items-center gap-4">
+                {getHealthIcon(analysis.health)}
+                <div>
+                  <p className="text-xs text-text-secondary font-bold uppercase tracking-tighter">Status</p>
+                  <div className="mt-0.5">{getHealthBadge(analysis.health)}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <TrendingUp size={20} className="text-accent ml-auto mb-1" />
+                <p className="text-[10px] text-text-secondary uppercase font-bold tracking-widest">Analysis Live</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Key Insights</p>
+              <div className="space-y-3">
+                {analysis.insights.map((insight, i) => (
+                  <div key={i} className="flex gap-3 items-start group">
+                    <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent group-hover:scale-150 transition-transform"></div>
+                    <p className="text-sm text-text-primary leading-relaxed">{insight}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center space-y-4 text-center opacity-50">
+            <Sparkles size={48} className="text-accent/20" />
+            <p className="text-sm italic">Click refresh to analyze project health</p>
+          </div>
+        )}
+      </div>
+      
+      <div className="px-6 py-4 bg-bg-tertiary/20 border-t border-border mt-auto">
+        <p className="text-[9px] text-text-secondary italic text-center">
+          Insights are generated by AI based on current tasks, blockers, and team velocity.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default AIInsights;

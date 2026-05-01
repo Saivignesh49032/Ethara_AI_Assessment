@@ -34,3 +34,8 @@ export const deleteTask = async (id) => {
   const response = await api.delete(`/tasks/${id}`);
   return response.data.data;
 };
+
+export const searchTasks = async (query) => {
+  const response = await api.get(`/tasks/search?q=${query}`);
+  return response.data.data;
+};

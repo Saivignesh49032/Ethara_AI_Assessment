@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { success, error } from '../utils/response.js';
 import { createTaskSchema, updateTaskSchema, statusSchema, assignSchema } from '../validators/task.validator.js';
+import { logActivity } from '../utils/logger.js';
 
 export const getProjectTasks = async (req, res) => {
   try {
@@ -89,6 +90,14 @@ export const createTask = async (req, res) => {
         subtasks: true,
         _count: { select: { subtasks: true } }
       }
+    });
+
+    await logActivity({
+      userId: req.user.id,
+      projectId,
+      action: 'CREATED_TASK',
+      details: { title: task.title, type: task.type },
+      taskId: task.id
     });
 
     return success(res, { task }, 201);
@@ -181,6 +190,14 @@ export const updateStatus = async (req, res) => {
       }
     });
 
+    await logActivity({
+      userId: req.user.id,
+      projectId: task.projectId,
+      action: 'UPDATED_STATUS',
+      details: { title: task.title, status: validatedData.status },
+      taskId: task.id
+    });
+
     return success(res, { task });
   } catch (err) {
     if (err.name === 'ZodError') return error(res, err.errors[0].message, 400);
@@ -223,12 +240,62 @@ export const assignTask = async (req, res) => {
 
 export const deleteTask = async (req, res) => {
   try {
-    const { id } = req.params;
-    await prisma.task.delete({ where: { id } });
+    const task = await prisma.task.findUnique({ where: { id } });
+    if (task) {
+      await logActivity({
+        userId: req.user.id,
+        projectId: task.projectId,
+        action: 'DELETED_TASK',
+        details: { title: task.title },
+        taskId: task.id
+      });
+      await prisma.task.delete({ where: { id } });
+    }
     return success(res, { message: 'Task deleted successfully' });
   } catch (err) {
     if (err.code === 'P2025') return error(res, 'Task not found', 404);
     console.error('Delete task error:', err);
+    return error(res, 'Internal server error', 500);
+  }
+};
+export const searchTasks = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const userId = req.user.id;
+
+    if (!q || q.length < 2) {
+      return success(res, { tasks: [] });
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        AND: [
+          {
+            project: {
+              members: {
+                some: { userId }
+              }
+            }
+          },
+          {
+            OR: [
+              { title: { contains: q } },
+              { description: { contains: q } }
+            ]
+          }
+        ]
+      },
+      include: {
+        project: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true, avatar: true } }
+      },
+      take: 10,
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    return success(res, { tasks });
+  } catch (err) {
+    console.error('Search tasks error:', err);
     return error(res, 'Internal server error', 500);
   }
 };

@@ -32,9 +32,12 @@ import useAuthStore from '../store/authStore';
 import Skeleton from '../components/ui/Skeleton';
 import Badge from '../components/ui/Badge';
 import Avatar from '../components/ui/Avatar';
+import AIInsights from '../components/dashboard/AIInsights';
 
 const DashboardPage = () => {
   const { user } = useAuthStore();
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
@@ -54,9 +57,11 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const { projects } = await getProjects();
+      const { projects: projectList } = await getProjects();
+      setProjects(projectList);
+      if (projectList.length > 0 && !selectedProjectId) setSelectedProjectId(projectList[0].id);
       
-      const tasksPromises = projects.map(p => getProjectTasks(p.id));
+      const tasksPromises = projectList.map(p => getProjectTasks(p.id));
       const tasksResults = await Promise.all(tasksPromises);
       
       let allTasks = [];
@@ -171,8 +176,12 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Progress Chart */}
         <div className="lg:col-span-2 bg-bg-secondary p-6 rounded-2xl border border-border flex flex-col min-h-[400px]">
-          <h3 className="text-lg font-bold text-text-primary mb-1">Project Velocity</h3>
-          <p className="text-sm text-text-secondary mb-6">Completion rates per project</p>
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-text-primary mb-1">Project Velocity</h3>
+              <p className="text-sm text-text-secondary">Completion rates per project</p>
+            </div>
+          </div>
           <div className="flex-1 min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -191,6 +200,21 @@ const DashboardPage = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+
+        {/* AI Insights Panel */}
+        <div className="flex flex-col space-y-4 h-full">
+          <div className="flex items-center justify-between px-1">
+             <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Select Project</p>
+             <select 
+               value={selectedProjectId} 
+               onChange={(e) => setSelectedProjectId(e.target.value)}
+               className="bg-transparent text-xs font-bold text-accent outline-none cursor-pointer"
+             >
+               {projects.map(p => <option key={p.id} value={p.id} className="bg-bg-secondary text-text-primary">{p.name}</option>)}
+             </select>
+          </div>
+          <AIInsights projectId={selectedProjectId} />
         </div>
 
         {/* Issue Type Distribution */}
