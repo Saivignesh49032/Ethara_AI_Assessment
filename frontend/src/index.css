@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: hsl(225, 25%, 8%);
+  --color-bg-secondary: hsl(225, 20%, 12%);
+  --color-bg-tertiary: hsl(225, 18%, 16%);
+  --color-border: hsl(225, 15%, 20%);
+  --color-text-primary: hsl(220, 20%, 95%);
+  --color-text-secondary: hsl(220, 15%, 65%);
+  --color-accent: hsl(250, 85%, 65%);
+  --color-accent-hover: hsl(250, 85%, 72%);
+
+  --color-status-todo: hsl(220, 10%, 50%);
+  --color-status-in-progress: hsl(210, 90%, 55%);
+  --color-status-in-review: hsl(40, 90%, 55%);
+  --color-status-done: hsl(145, 70%, 45%);
+
+  --color-priority-low: hsl(215, 15%, 55%);
+  --color-priority-medium: hsl(210, 80%, 55%);
+  --color-priority-high: hsl(25, 95%, 55%);
+  --color-priority-urgent: hsl(0, 85%, 55%);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-primary text-text-primary font-sans antialiased;
+  }
+
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(225, 15%, 30%);
+  }
+
+  /* Custom Scrollbar Utility */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-border/50 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent/40;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+}
