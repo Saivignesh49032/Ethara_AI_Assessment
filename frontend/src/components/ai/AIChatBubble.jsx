@@ -52,7 +52,7 @@ const AIChatBubble = () => {
   if (!projectId) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <div className="fixed bottom-20 md:bottom-6 right-6 z-[100] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
         <div className={`bg-bg-secondary border border-border shadow-2xl rounded-3xl overflow-hidden flex flex-col transition-all duration-300 mb-4 ${isMinimized ? 'h-16 w-72' : 'h-[500px] w-[350px] sm:w-[400px]'}`}>
