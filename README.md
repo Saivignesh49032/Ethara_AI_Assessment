@@ -5,7 +5,7 @@ TaskFlow AI is a high-performance, AI-augmented project management platform desi
 ---
 
 ## 🌐 Live Demo & Repository
-- **Live URL**: [Visit TaskFlow AI](https://etharaaiassessment-production-d094.up.railway.app/)
+- **Live URL**: [Visit TaskFlow AI](https://strong-exploration-production-bc68.up.railway.app)
 - **GitHub**: [Saivignesh49032/Ethara_AI_Assessment](https://github.com/Saivignesh49032/Ethara_AI_Assessment)
 
 ---
