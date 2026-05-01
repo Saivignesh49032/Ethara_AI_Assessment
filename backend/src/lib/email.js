@@ -1,12 +1,20 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+if (!resend) {
+  console.warn('RESEND_API_KEY is not defined. Email invitations will be disabled.');
+}
 
 /**
  * Send a project invitation email via Resend
  */
 export const sendInvitationEmail = async ({ to, inviterName, projectName, inviteLink }) => {
   try {
+    if (!resend) {
+      console.log('Skipping email send (RESEND_API_KEY missing):', { to, projectName });
+      return { success: true, message: 'Email service disabled' };
+    }
     const { data, error } = await resend.emails.send({
       from: 'TaskFlow <onboarding@resend.dev>',
       to: [to],
