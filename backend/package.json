@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "prisma generate && prisma db push"
+    "build": "npx prisma generate"
   },
   "keywords": [],
   "author": "",
